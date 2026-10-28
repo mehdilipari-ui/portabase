@@ -26,6 +26,7 @@ import { MemberWithUser } from "@/db/schema/03_organization";
 import { ButtonWithConfirm } from "@/components/common/button-with-confirm";
 import {LogsModalTrigger} from "@/features/logs/components/logs-modal-trigger";
 import {formatDuration} from "@/utils/text";
+import {isOrganizationManager} from "@/lib/acl/role";
 
 export function restoreColumns(
   isAlreadyRestore: boolean,
@@ -127,7 +128,7 @@ export function restoreColumns(
 
         return (
           <>
-            {activeMember.role !== "member" && (
+            {isOrganizationManager(activeMember.role) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

@@ -17,6 +17,7 @@ import {cn} from "@/lib/utils";
 import {isReplica} from "@/features/database/utils/backup-method";
 import {MemberWithUser} from "@/db/schema/03_organization";
 import {TooltipCustom} from "@/components/common/tooltip-custom";
+import {canDownloadOrganizationBackups, isOrganizationManager} from "@/lib/acl/role";
 
 interface DatabaseActionsCellProps {
     backup: BackupWith;
@@ -28,11 +29,15 @@ interface DatabaseActionsCellProps {
 export function DatabaseActionsCell({backup, activeMember, isAlreadyRestore, isBackupOnly}: DatabaseActionsCellProps) {
     const {openModal} = useBackupModal();
 
-    if (backup.deletedAt || activeMember.role === "member") return null;
+    const isManager = isOrganizationManager(activeMember.role);
+    if (backup.deletedAt || !canDownloadOrganizationBackups(activeMember.role)) return null;
 
     const liveStorages = backup.storages?.filter((storage) => storage.deletedAt === null) ?? [];
     const canDownload = liveStorages.length === 0 || liveStorages.some((storage) => storage.engine === "archive");
-    const canRestore = liveStorages.length === 0 || liveStorages.some((storage) => !isReplica(storage.engine));
+    const canRestore = isManager && (liveStorages.length === 0 || liveStorages.some((storage) => !isReplica(storage.engine)));
+
+    // Downloaders only get the download entry.
+    if (!isManager && (backup.status !== "success" || !canDownload)) return null;
 
     return (
         <div className={cn("flex items-center space-x-2")}>
@@ -68,10 +73,14 @@ export function DatabaseActionsCell({backup, activeMember, isAlreadyRestore, isB
                         </>
                     ) : null}
 
-                    <DropdownMenuSeparator/>
-                    <DropdownMenuItem onSelect={() => openModal("delete", backup)} className="text-red-600">
-                        <Trash2/> Delete
-                    </DropdownMenuItem>
+                    {isManager && (
+                        <>
+                            <DropdownMenuSeparator/>
+                            <DropdownMenuItem onSelect={() => openModal("delete", backup)} className="text-red-600">
+                                <Trash2/> Delete
+                            </DropdownMenuItem>
+                        </>
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>

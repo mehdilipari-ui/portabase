@@ -21,6 +21,7 @@ import { CronButton } from "@/features/database/components/cron-button";
 import { ChannelPoliciesModal } from "@/features/database/components/channels-policy-modal";
 import { Megaphone, HardDrive } from "lucide-react";
 import { InfoTooltip } from "@/features/stats/components/info-tooltip";
+import { isOrganizationManager } from "@/lib/acl/role";
 
 export default async function RoutePage(
   props: PageParams<{
@@ -69,7 +70,7 @@ export default async function RoutePage(
   const availableDatabases = maskDatabasesSecretsForClient(
     await getOrganizationAvailableDatabases(organization.id, proj.id),
   );
-  const isMember = activeMember?.role === "member";
+  const isMember = !isOrganizationManager(activeMember?.role);
 
   const orgNotificationChannels = (
     await getOrganizationChannels(org.id)

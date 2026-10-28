@@ -1,5 +1,5 @@
 import {MemberWithUser} from "@/db/schema/03_organization";
-import {OrganizationRole} from "@/lib/acl/role";
+import {canDownloadOrganizationBackups, OrganizationRole} from "@/lib/acl/role";
 
 
 export type OrganizationPermissions = {
@@ -7,6 +7,7 @@ export type OrganizationPermissions = {
     isOwner: boolean;
     isAdmin: boolean;
     isMember: boolean;
+    isDownloader: boolean;
 
     canManageAgents: boolean;
     canManageSettings: boolean;
@@ -14,6 +15,7 @@ export type OrganizationPermissions = {
     canManageNotifications: boolean;
     canManageStorages: boolean;
     canManageDangerZone: boolean;
+    canDownloadBackups: boolean;
 };
 
 
@@ -25,12 +27,14 @@ export const computeOrganizationPermissions = (
     const isOwner = role === "owner";
     const isAdmin = role === "admin";
     const isMember = role === "member";
+    const isDownloader = role === "downloader";
 
     return {
         role,
         isOwner,
         isAdmin,
         isMember,
+        isDownloader,
 
         canManageSettings: isOwner || isAdmin,
         canManageAgents: isOwner || isAdmin,
@@ -38,5 +42,6 @@ export const computeOrganizationPermissions = (
         canManageNotifications: isOwner || isAdmin,
         canManageStorages: isOwner || isAdmin,
         canManageDangerZone: isOwner,
+        canDownloadBackups: canDownloadOrganizationBackups(role),
     };
 };

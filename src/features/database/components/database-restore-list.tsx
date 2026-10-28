@@ -14,6 +14,7 @@ import {ButtonWithConfirm} from "@/components/common/button-with-confirm";
 import {useServerDataTable} from "@/hooks/use-server-data-table";
 import {fetchRestorationsAction} from "@/features/database/actions/backup-list.action";
 import type {FetchRestorationsSchema} from "@/features/database/actions/backup-list.schema";
+import {isOrganizationManager} from "@/lib/acl/role";
 
 type DatabaseRestoreListProps = {
     isAlreadyRestore: boolean;
@@ -63,7 +64,7 @@ export const DatabaseRestoreList = (props: DatabaseRestoreListProps) => {
             queryClient.invalidateQueries({queryKey: ["restorations", props.databaseId]});
         },
     });
-    const isMember = props.activeMember.role === "member";
+    const isMember = !isOrganizationManager(props.activeMember.role);
 
     return (
         <DataTable

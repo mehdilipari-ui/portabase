@@ -27,6 +27,7 @@ import {InfoTooltip} from "@/features/stats/components/info-tooltip";
 import {METHOD_DESCRIPTIONS, METHOD_LABELS} from "@/features/database/utils/backup-method";
 import {Alert, AlertDescription, AlertTitle} from "@/components/ui/alert";
 import {AlertCircleIcon} from "lucide-react";
+import {isOrganizationManager} from "@/lib/acl/role";
 
 export type DatabaseContentProps = {
     isAlreadyRestore: boolean;
@@ -90,7 +91,7 @@ export const DatabaseContent = (props: DatabaseContentProps) => {
     const isAlreadyRestore = data?.isAlreadyRestore ?? props.isAlreadyRestore;
     const isAlreadyBackup = data?.isAlreadyBackup ?? false;
 
-    const isMember = props.activeMember.role === "member";
+    const isMember = !isOrganizationManager(props.activeMember.role);
 
     return (
         <>

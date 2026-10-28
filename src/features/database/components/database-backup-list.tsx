@@ -15,6 +15,7 @@ import {ButtonWithConfirm} from "@/components/common/button-with-confirm";
 import {useServerDataTable} from "@/hooks/use-server-data-table";
 import {fetchBackupsAction} from "@/features/database/actions/backup-list.action";
 import type {FetchBackupsSchema} from "@/features/database/actions/backup-list.schema";
+import {isOrganizationManager} from "@/lib/acl/role";
 
 type DatabaseBackupListProps = {
     isAlreadyRestore: boolean;
@@ -94,7 +95,7 @@ export const DatabaseBackupList = (props: DatabaseBackupListProps) => {
         },
     });
 
-    const isMember = props.activeMember.role === "member";
+    const isMember = !isOrganizationManager(props.activeMember.role);
 
     return (
         <DataTable

@@ -6,6 +6,7 @@ import {getActiveMember, getOrganization} from "@/lib/auth/auth";
 import {computeOrganizationPermissions} from "@/lib/acl/organization-acl";
 import {isAgentOnline} from "@/features/agents/utils/status/agent-status";
 import {PolicyScope} from "@/features/database/schemas/policy-scope.schema";
+import {canDownloadOrganizationBackups, isOrganizationManager} from "@/lib/acl/role";
 
 export class DatabaseNotFoundError extends Error {
     constructor(databaseId: string) {
@@ -121,14 +122,23 @@ export async function assertCanReadDatabase(databaseId: string): Promise<void> {
 }
 
 /**
- * Backup operations (download, restore, delete, migration): read access plus an
- * owner or admin role in that organization — members do not see these actions.
+ * Backup operations (restore, delete, import, migration): read access plus an
+ * owner or admin role in that organization — members and downloaders do not see these actions.
  */
 export async function assertCanOperateDatabase(databaseId: string): Promise<void> {
     await assertCanReadDatabase(databaseId);
     const activeMember = await getActiveMember();
-    if (!activeMember || activeMember.role === "member") {
+    if (!activeMember || !isOrganizationManager(activeMember.role)) {
         throw new UnauthorizedError(databaseId, `Not authorized to operate on this database: ${databaseId}`);
+    }
+}
+
+/** Backup download: read access plus an owner, admin or downloader role in that organization. */
+export async function assertCanDownloadDatabaseBackup(databaseId: string): Promise<void> {
+    await assertCanReadDatabase(databaseId);
+    const activeMember = await getActiveMember();
+    if (!activeMember || !canDownloadOrganizationBackups(activeMember.role)) {
+        throw new UnauthorizedError(databaseId, `Not authorized to download backups of this database: ${databaseId}`);
     }
 }
 

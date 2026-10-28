@@ -16,6 +16,7 @@ import {
   admin,
   orgAdmin,
   orgMember,
+  orgDownloader,
   orgOwner,
   pending,
   superadmin,
@@ -356,6 +357,7 @@ export const auth = betterAuth({
         owner: orgOwner,
         admin: orgAdmin,
         member: orgMember,
+        downloader: orgDownloader,
       },
     }),
     adminPlugin({

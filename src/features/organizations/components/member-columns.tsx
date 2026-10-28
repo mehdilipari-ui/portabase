@@ -15,6 +15,8 @@ import {
 import {updateMemberRoleAction} from "@/features/organizations/actions/update-member.action";
 import {RoleSchemaMember} from "@/features/organizations/schemas/member.schema";
 import {useState} from "react";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {isOrganizationManager} from "@/lib/acl/role";
 
 
 export function organizationMemberColumns(
@@ -31,13 +33,18 @@ export function organizationMemberColumns(
                 const activeOrgaMember = authClient.useActiveMember();
 
                 const updateMutation = useMutation({
-                    mutationFn: () =>
+                    mutationFn: (nextRole: string) =>
                         updateMemberRoleAction({
                             memberId: row.original.id,
                             organizationId: row.original.organizationId,
-                            role: RoleSchemaMember.parse(role),
+                            role: RoleSchemaMember.parse(nextRole),
                         }),
-                    onSuccess: () => {
+                    onSuccess: (result, nextRole) => {
+                        if (!result?.data?.success) {
+                            toast.error("An error occurred while updating user information.");
+                            return;
+                        }
+                        setRole(nextRole);
                         toast.success("User updated successfully.");
                     },
                     onError: () => {
@@ -45,15 +52,8 @@ export function organizationMemberColumns(
                     },
                 });
 
-                // Only allow cycling between admin <-> member
-                const handleUpdateRole = async () => {
-                    const nextRole = role === "admin" ? "member" : "admin";
-                    setRole(nextRole);
-                    await updateMutation.mutateAsync();
-                };
-
                 const isCurrentUser = session?.user.email === row.original.user.email;
-                const isMember = activeOrgaMember.data?.role === "member";
+                const isMember = !isOrganizationManager(activeOrgaMember.data?.role);
                 const isRowRoleOwner = role === "owner";
 
                 const isDisabled = isMember || isCurrentUser || isRowRoleOwner || isDemoBlocked;
@@ -67,31 +67,39 @@ export function organizationMemberColumns(
                             ? "Owner role cannot be modified"
                             : "Members cannot edit roles";
 
-                const badge = (
-                    <Badge
-                        className={
-                            isDisabled
-                                ? "cursor-not-allowed opacity-50"
-                                : "cursor-pointer hover:bg-accent"
-                        }
-                        onClick={isDisabled ? undefined : handleUpdateRole}
-                        variant="outline"
-                    >
-                        {role}
-                    </Badge>
-                );
+                if (isDisabled) {
+                    return (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Badge className="cursor-not-allowed opacity-50" variant="outline">
+                                        {role}
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{disabledReason}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    );
+                }
 
-                return isDisabled ? (
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>{badge}</TooltipTrigger>
-                            <TooltipContent>
-                                <p>{disabledReason}</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                ) : (
-                    badge
+                // Owner transfer is handled elsewhere: only admin / downloader / member here.
+                return (
+                    <Select
+                        value={role}
+                        disabled={updateMutation.isPending}
+                        onValueChange={(nextRole) => updateMutation.mutate(nextRole)}
+                    >
+                        <SelectTrigger size="sm" className="w-36">
+                            <SelectValue/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="member">Member</SelectItem>
+                            <SelectItem value="downloader">Downloader</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                    </Select>
                 );
             },
         },

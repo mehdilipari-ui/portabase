@@ -10,6 +10,7 @@ import {Metadata} from "next";
 import {ProjectDialog} from "@/features/projects/components/project-dialog";
 import {getOrganizationAvailableDatabases} from "@/db/services/database";
 import {maskDatabasesSecretsForClient} from "@/features/database/utils/credential-fields";
+import {isOrganizationManager} from "@/lib/acl/role";
 
 export const metadata: Metadata = {
     title: "Projects",
@@ -34,7 +35,7 @@ export default async function RoutePage(props: PageParams<{}>) {
             databases: true,
         },
     });
-    const isMember = activeMember?.role === "member";
+    const isMember = !isOrganizationManager(activeMember?.role);
 
     for (const p of projects) {
         p.databases = maskDatabasesSecretsForClient(p.databases);

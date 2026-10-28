@@ -10,7 +10,7 @@ import * as drizzleDb from "@/db";
 import {Backup, Restoration} from "@/db/schema/07_database";
 import {withUpdatedAt} from "@/db/utils";
 import {deleteBackupService, deleteBackupStorageObject} from "@/lib/tasks/database/utils/backup-delete.service";
-import {assertCanOperateDatabase} from "@/features/database/utils/database-acl";
+import {assertCanDownloadDatabaseBackup, assertCanOperateDatabase} from "@/features/database/utils/database-acl";
 import {isReplica} from "@/features/database/utils/backup-method";
 
 async function authorize(databaseId: string): Promise<void> {
@@ -45,7 +45,11 @@ export const downloadBackupAction = userAction.inputSchema(
                 },
             };
         }
-        await authorize(backupStorage.backup.databaseId);
+        try {
+            await assertCanDownloadDatabaseBackup(backupStorage.backup.databaseId);
+        } catch {
+            throw new ActionError("Not authorized");
+        }
         if (backupStorage.status !== "success" || !backupStorage.path) {
             return {
                 success: false,

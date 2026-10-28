@@ -70,6 +70,7 @@ export const OrganizationMemberChangeRoleModal = (props: OrganizationMemberChang
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="member">Member</SelectItem>
+                        <SelectItem value="downloader">Downloader</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem value="owner">Owner</SelectItem>
                     </SelectContent>

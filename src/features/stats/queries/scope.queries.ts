@@ -13,7 +13,7 @@ export type DashboardScope = string[] | null;
 
 const INSTANCE_ROLES = ["admin", "superadmin"];
 
-const ORG_READ_ROLES = ["owner", "admin", "member"];
+const ORG_READ_ROLES = ["owner", "admin", "downloader", "member"];
 
 export async function getDashboardScope(): Promise<DashboardScope> {
   const user = await currentUser();
