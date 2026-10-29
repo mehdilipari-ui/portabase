@@ -1,2 +1,2 @@
-export type MemberRole = "member" | "downloader" | "admin" | "owner";
+export type MemberRole = "member" | "admin" | "owner";
 export type MemberRoleType = MemberRole | MemberRole[];

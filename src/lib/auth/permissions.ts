@@ -55,14 +55,6 @@ const orgMember = ac.newRole({
   ...orgMemberAc.statements,
 });
 
-// Read-only like a member, but may download backup files (no restore, no delete).
-const orgDownloader = ac.newRole({
-  project: ["list"],
-  database: ["list", "backup"],
-  agent: ["list"],
-  ...orgMemberAc.statements,
-});
-
 const orgAdmin = ac.newRole({
   project: ["create", "update"],
   ...orgMemberAc.statements,
@@ -76,4 +68,4 @@ const orgOwner = ac.newRole({
   ...orgOwnerAc.statements,
 });
 
-export { ac, admin, superadmin, user, pending, orgAdmin, orgMember, orgDownloader, orgOwner };
+export { ac, admin, superadmin, user, pending, orgAdmin, orgMember, orgOwner };
