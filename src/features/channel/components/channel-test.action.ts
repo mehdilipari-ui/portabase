@@ -3,7 +3,7 @@
 import {z} from "zod";
 import {ActionError, userAction} from "@/lib/safe-actions/actions";
 import {computeSystemPermissions} from "@/lib/acl/system-acl";
-import {computeOrganizationPermissions} from "@/lib/acl/organization-acl";
+import {getOrganizationPermissions} from "@/lib/acl/organization-acl.server";
 import {getActiveMember} from "@/lib/auth/auth";
 import {dispatchNotification} from "@/features/notifications/utils/notifications.dispatch";
 import {dispatchStorage} from "@/features/storages/utils/storages.dispatch";
@@ -29,7 +29,7 @@ export const testChannelAction = userAction
         const {isAdmin, isSuperAdmin} = computeSystemPermissions(ctx.user);
         if (!isAdmin && !isSuperAdmin) {
             const member = organizationId ? await getActiveMember() : null;
-            const permissions = computeOrganizationPermissions(member ?? null);
+            const permissions = getOrganizationPermissions(member ?? null);
             const canManage = kind === "notification" ? permissions.canManageNotifications : permissions.canManageStorages;
             if (!member || member.organizationId !== organizationId || !canManage) {
                 throw new ActionError("You are not allowed to perform this action");

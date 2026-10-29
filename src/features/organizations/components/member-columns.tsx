@@ -15,8 +15,7 @@ import {
 import {updateMemberRoleAction} from "@/features/organizations/actions/update-member.action";
 import {RoleSchemaMember} from "@/features/organizations/schemas/member.schema";
 import {useState} from "react";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
-import {isOrganizationManager} from "@/lib/acl/role";
+import {useOrganizationPermissions} from "@/hooks/acl/use-organization-acl";
 
 
 export function organizationMemberColumns(
@@ -52,11 +51,17 @@ export function organizationMemberColumns(
                     },
                 });
 
+                const {canManageUsers} = useOrganizationPermissions(activeOrgaMember.data ?? null);
+
+                // Only allow cycling between admin <-> member
+                const handleUpdateRole = () => {
+                    updateMutation.mutate(role === "admin" ? "member" : "admin");
+                };
+
                 const isCurrentUser = session?.user.email === row.original.user.email;
-                const isMember = !isOrganizationManager(activeOrgaMember.data?.role);
                 const isRowRoleOwner = role === "owner";
 
-                const isDisabled = isMember || isCurrentUser || isRowRoleOwner || isDemoBlocked;
+                const isDisabled = !canManageUsers || isCurrentUser || isRowRoleOwner || isDemoBlocked;
 
                 // Dynamic tooltip reason
                 const disabledReason = isDemoBlocked
@@ -67,39 +72,31 @@ export function organizationMemberColumns(
                             ? "Owner role cannot be modified"
                             : "Members cannot edit roles";
 
-                if (isDisabled) {
-                    return (
-                        <TooltipProvider>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Badge className="cursor-not-allowed opacity-50" variant="outline">
-                                        {role}
-                                    </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{disabledReason}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </TooltipProvider>
-                    );
-                }
-
-                // Owner transfer is handled elsewhere: only admin / downloader / member here.
-                return (
-                    <Select
-                        value={role}
-                        disabled={updateMutation.isPending}
-                        onValueChange={(nextRole) => updateMutation.mutate(nextRole)}
+                const badge = (
+                    <Badge
+                        className={
+                            isDisabled || updateMutation.isPending
+                                ? "cursor-not-allowed opacity-50"
+                                : "cursor-pointer hover:bg-accent"
+                        }
+                        onClick={isDisabled || updateMutation.isPending ? undefined : handleUpdateRole}
+                        variant="outline"
                     >
-                        <SelectTrigger size="sm" className="w-36">
-                            <SelectValue/>
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="member">Member</SelectItem>
-                            <SelectItem value="downloader">Downloader</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                    </Select>
+                        {role}
+                    </Badge>
+                );
+
+                return isDisabled ? (
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>{badge}</TooltipTrigger>
+                            <TooltipContent>
+                                <p>{disabledReason}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                ) : (
+                    badge
                 );
             },
         },

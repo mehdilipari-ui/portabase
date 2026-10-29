@@ -14,7 +14,7 @@ import {ButtonWithConfirm} from "@/components/common/button-with-confirm";
 import {useServerDataTable} from "@/hooks/use-server-data-table";
 import {fetchRestorationsAction} from "@/features/database/actions/backup-list.action";
 import type {FetchRestorationsSchema} from "@/features/database/actions/backup-list.schema";
-import {isOrganizationManager} from "@/lib/acl/role";
+import {useOrganizationPermissions} from "@/hooks/acl/use-organization-acl";
 
 type DatabaseRestoreListProps = {
     isAlreadyRestore: boolean;
@@ -26,9 +26,11 @@ export const DatabaseRestoreList = (props: DatabaseRestoreListProps) => {
     const queryClient = useQueryClient();
     const [isActionsOpen, setIsActionsOpen] = useState(false);
 
+    const {canManageDatabases} = useOrganizationPermissions(props.activeMember);
+
     const columns = useMemo(() => {
-        return restoreColumns(props.isAlreadyRestore, props.activeMember);
-    }, [props.isAlreadyRestore, props.activeMember.id, props.activeMember.role]);
+        return restoreColumns(props.isAlreadyRestore, canManageDatabases);
+    }, [props.isAlreadyRestore, canManageDatabases]);
 
     const {data, tableProps, isFetching, isLoading} = useServerDataTable<RestorationWith, FetchRestorationsSchema>({
         fetchAction: fetchRestorationsAction,
@@ -64,11 +66,9 @@ export const DatabaseRestoreList = (props: DatabaseRestoreListProps) => {
             queryClient.invalidateQueries({queryKey: ["restorations", props.databaseId]});
         },
     });
-    const isMember = !isOrganizationManager(props.activeMember.role);
-
     return (
         <DataTable
-            enableSelect={!isMember}
+            enableSelect={canManageDatabases}
             columns={columns}
             data={data}
             enablePagination
@@ -76,7 +76,7 @@ export const DatabaseRestoreList = (props: DatabaseRestoreListProps) => {
             {...tableProps}
             selectedActions={(rows) => (
                 <>
-                    {!isMember && (
+                    {canManageDatabases && (
                         <DropdownMenu open={isActionsOpen} onOpenChange={setIsActionsOpen}>
                             <DropdownMenuTrigger asChild>
                                 <ButtonWithLoading

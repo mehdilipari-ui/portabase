@@ -22,15 +22,13 @@ import {
 } from "@/features/database/actions/restore.action";
 import { toast } from "sonner";
 import { TooltipCustom } from "@/components/common/tooltip-custom";
-import { MemberWithUser } from "@/db/schema/03_organization";
 import { ButtonWithConfirm } from "@/components/common/button-with-confirm";
 import {LogsModalTrigger} from "@/features/logs/components/logs-modal-trigger";
 import {formatDuration} from "@/utils/text";
-import {isOrganizationManager} from "@/lib/acl/role";
 
 export function restoreColumns(
   isAlreadyRestore: boolean,
-  activeMember: MemberWithUser,
+  canManageDatabases: boolean,
 ): ColumnDef<RestorationWith>[] {
   return [
     {
@@ -128,7 +126,7 @@ export function restoreColumns(
 
         return (
           <>
-            {isOrganizationManager(activeMember.role) && (
+            {canManageDatabases && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

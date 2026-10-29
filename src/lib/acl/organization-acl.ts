@@ -1,13 +1,17 @@
 import {MemberWithUser} from "@/db/schema/03_organization";
-import {canDownloadOrganizationBackups, OrganizationRole} from "@/lib/acl/role";
+import {OrganizationRole} from "@/lib/acl/role";
 
+
+/** Instance-wide settings that tune what organization roles may do (fed from env, see organization-acl.server.ts). */
+export type OrganizationAclOptions = {
+    membersCanDownloadBackups: boolean;
+};
 
 export type OrganizationPermissions = {
     role: OrganizationRole | null;
     isOwner: boolean;
     isAdmin: boolean;
     isMember: boolean;
-    isDownloader: boolean;
 
     canManageAgents: boolean;
     canManageSettings: boolean;
@@ -15,33 +19,36 @@ export type OrganizationPermissions = {
     canManageNotifications: boolean;
     canManageStorages: boolean;
     canManageDangerZone: boolean;
+    canManageDatabases: boolean;
     canDownloadBackups: boolean;
 };
 
 
 export const computeOrganizationPermissions = (
-    activeMember: MemberWithUser | null
+    activeMember: Pick<MemberWithUser, "role"> | null,
+    options: OrganizationAclOptions,
 ): OrganizationPermissions => {
     const role = (activeMember?.role as OrganizationRole) ?? null;
 
     const isOwner = role === "owner";
     const isAdmin = role === "admin";
     const isMember = role === "member";
-    const isDownloader = role === "downloader";
+    const isManager = isOwner || isAdmin;
 
     return {
         role,
         isOwner,
         isAdmin,
         isMember,
-        isDownloader,
 
-        canManageSettings: isOwner || isAdmin,
-        canManageAgents: isOwner || isAdmin,
-        canManageUsers: isOwner || isAdmin,
-        canManageNotifications: isOwner || isAdmin,
-        canManageStorages: isOwner || isAdmin,
+        canManageSettings: isManager,
+        canManageAgents: isManager,
+        canManageUsers: isManager,
+        canManageNotifications: isManager,
+        canManageStorages: isManager,
         canManageDangerZone: isOwner,
-        canDownloadBackups: canDownloadOrganizationBackups(role),
+        // Projects, databases and backups write operations (restore, delete, import, policies...).
+        canManageDatabases: isManager,
+        canDownloadBackups: isManager || (isMember && options.membersCanDownloadBackups),
     };
 };

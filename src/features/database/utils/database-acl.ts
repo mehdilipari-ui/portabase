@@ -3,10 +3,9 @@ import {db} from "@/db";
 import * as drizzleDb from "@/db";
 import {currentUser} from "@/lib/auth/current-user";
 import {getActiveMember, getOrganization} from "@/lib/auth/auth";
-import {computeOrganizationPermissions} from "@/lib/acl/organization-acl";
+import {getOrganizationPermissions} from "@/lib/acl/organization-acl.server";
 import {isAgentOnline} from "@/features/agents/utils/status/agent-status";
 import {PolicyScope} from "@/features/database/schemas/policy-scope.schema";
-import {canDownloadOrganizationBackups, isOrganizationManager} from "@/lib/acl/role";
 
 export class DatabaseNotFoundError extends Error {
     constructor(databaseId: string) {
@@ -56,7 +55,7 @@ export async function assertCanDeleteDatabase(databaseId: string): Promise<void>
         const organization = await getOrganization({});
         const activeMember = await getActiveMember();
         const canManage = activeMember
-            ? computeOrganizationPermissions(activeMember).canManageAgents
+            ? getOrganizationPermissions(activeMember).canManageAgents
             : false;
 
         const hasAccess =
@@ -95,7 +94,7 @@ export async function assertCanManageAgentDatabases(agentId: string): Promise<vo
         const organization = await getOrganization({});
         const activeMember = await getActiveMember();
         const canManage = activeMember
-            ? computeOrganizationPermissions(activeMember).canManageAgents
+            ? getOrganizationPermissions(activeMember).canManageAgents
             : false;
         const hasAccess = !!organization && agent.organizationId === organization.id;
         authorized = canManage && hasAccess;
@@ -122,22 +121,22 @@ export async function assertCanReadDatabase(databaseId: string): Promise<void> {
 }
 
 /**
- * Backup operations (restore, delete, import, migration): read access plus an
- * owner or admin role in that organization — members and downloaders do not see these actions.
+ * Backup operations (restore, delete, import, migration): read access plus the
+ * `canManageDatabases` organization permission (owner or admin).
  */
 export async function assertCanOperateDatabase(databaseId: string): Promise<void> {
     await assertCanReadDatabase(databaseId);
     const activeMember = await getActiveMember();
-    if (!activeMember || !isOrganizationManager(activeMember.role)) {
+    if (!activeMember || !getOrganizationPermissions(activeMember).canManageDatabases) {
         throw new UnauthorizedError(databaseId, `Not authorized to operate on this database: ${databaseId}`);
     }
 }
 
-/** Backup download: read access plus an owner, admin or downloader role in that organization. */
+/** Backup download: read access plus the `canDownloadBackups` organization permission (see ORG_MEMBERS_CAN_DOWNLOAD_BACKUPS). */
 export async function assertCanDownloadDatabaseBackup(databaseId: string): Promise<void> {
     await assertCanReadDatabase(databaseId);
     const activeMember = await getActiveMember();
-    if (!activeMember || !canDownloadOrganizationBackups(activeMember.role)) {
+    if (!activeMember || !getOrganizationPermissions(activeMember).canDownloadBackups) {
         throw new UnauthorizedError(databaseId, `Not authorized to download backups of this database: ${databaseId}`);
     }
 }
@@ -156,7 +155,7 @@ export async function assertCanManageProject(projectId: string): Promise<void> {
         !organization ||
         project.organizationId !== organization.id ||
         !activeMember ||
-        !computeOrganizationPermissions(activeMember).canManageSettings
+        !getOrganizationPermissions(activeMember).canManageSettings
     ) {
         throw new UnauthorizedError(projectId, `Not authorized to manage this project: ${projectId}`);
     }

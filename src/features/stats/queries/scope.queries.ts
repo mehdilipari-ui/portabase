@@ -6,7 +6,7 @@ import { getActiveMember } from "@/lib/auth/auth";
 import { member } from "@/db/schema/04_member";
 import { organizationAgent } from "@/db/schema/08_agent";
 import { database } from "@/db/schema/07_database";
-import { computeOrganizationPermissions } from "@/lib/acl/organization-acl";
+import {getOrganizationPermissions} from "@/lib/acl/organization-acl.server";
 import type { AgentLinkAccess } from "@/features/stats/types";
 
 export type DashboardScope = string[] | null;
@@ -42,7 +42,7 @@ export async function getAgentLinkAccess(): Promise<AgentLinkAccess> {
     getActiveMember(),
   ]);
 
-  const { canManageAgents } = computeOrganizationPermissions(
+  const { canManageAgents } = getOrganizationPermissions(
     activeMember ?? null,
   );
 

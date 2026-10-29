@@ -10,7 +10,7 @@ import {Metadata} from "next";
 import {ProjectDialog} from "@/features/projects/components/project-dialog";
 import {getOrganizationAvailableDatabases} from "@/db/services/database";
 import {maskDatabasesSecretsForClient} from "@/features/database/utils/credential-fields";
-import {isOrganizationManager} from "@/lib/acl/role";
+import {getOrganizationPermissions} from "@/lib/acl/organization-acl.server";
 
 export const metadata: Metadata = {
     title: "Projects",
@@ -35,7 +35,7 @@ export default async function RoutePage(props: PageParams<{}>) {
             databases: true,
         },
     });
-    const isMember = !isOrganizationManager(activeMember?.role);
+    const {canManageDatabases} = getOrganizationPermissions(activeMember ?? null);
 
     for (const p of projects) {
         p.databases = maskDatabasesSecretsForClient(p.databases);
@@ -50,7 +50,7 @@ export default async function RoutePage(props: PageParams<{}>) {
         <Page>
             <PageHeader>
                 <PageTitle>Projects</PageTitle>
-                {(projects.length > 0 && !isMember) && (
+                {(projects.length > 0 && canManageDatabases) && (
                     <PageActions>
                         <ProjectDialog databases={availableDatabases} organization={organization}/>
                     </PageActions>
@@ -67,7 +67,7 @@ export default async function RoutePage(props: PageParams<{}>) {
                         numberOfColumns={3}
                         pageSizeOptions={[12, 24, 48]}
                     />
-                ) : isMember ? (
+                ) : !canManageDatabases ? (
                     <EmptyStatePlaceholder state={"empty"} text="No project available"/>
                 ) : (
                     <ProjectDialog databases={availableDatabases} organization={organization} isEmpty={true}/>

@@ -5,7 +5,7 @@ import {useEffect, useState} from "react";
 import {useRouter, useSearchParams} from "next/navigation";
 import {MemberWithUser, OrganizationWithMembers} from "@/db/schema/03_organization";
 import {NotificationChannel} from "@/db/schema/09_notification-channel";
-import {useOrganizationPermissions} from "@/features/organizations/hooks/use-organization-permissions";
+import {useOrganizationPermissions} from "@/hooks/acl/use-organization-acl";
 import {StorageChannel} from "@/db/schema/12_storage-channel";
 import {
     SettingsOrganizationMembersTable

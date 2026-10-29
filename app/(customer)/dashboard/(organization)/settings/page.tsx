@@ -11,7 +11,7 @@ import {notFound} from "next/navigation";
 import {Metadata} from "next";
 import {OrganizationTabs} from "@/features/organizations/components/organization-tabs";
 import {getOrganizationChannels} from "@/db/services/notification-channel";
-import {computeOrganizationPermissions} from "@/lib/acl/organization-acl";
+import {getOrganizationPermissions} from "@/lib/acl/organization-acl.server";
 import {getOrganizationStorageChannels} from "@/db/services/storage-channel";
 import {DeleteOrganizationButton} from "@/features/organizations/components/organization-delete-button";
 import {EditOrganizationDialog} from "@/features/organizations/components/organization-edit-dialog";
@@ -35,7 +35,7 @@ export default async function RoutePage(props: PageParams<{ slug: string }>) {
         notFound();
     }
 
-    const permissions = computeOrganizationPermissions(activeMember);
+    const permissions = getOrganizationPermissions(activeMember);
     const notificationChannels = permissions.canManageNotifications
         ? await getOrganizationChannels(organization.id)
         : [];
