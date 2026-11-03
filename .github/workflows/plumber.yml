@@ -18,3 +18,5 @@ jobs:
       - uses: getplumber/plumber@7ad9d267ee5a00163cec9e5c749a088d5f565167 # v0.4.26
         with:
           score-push: true
+          # Fork: main is intentionally left unprotected (direct pushes).
+          skip-controls: branchMustBeProtected
