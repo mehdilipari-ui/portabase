@@ -151,6 +151,11 @@ export const env = createEnv({
             .default("false")
             .transform((val) => val === "true"),
 
+        ORG_MEMBERS_CAN_DOWNLOAD_BACKUPS: z
+            .enum(["true", "false"])
+            .default("false")
+            .transform((val) => val === "true"),
+
         TELEMETRY: z
             .enum(["true", "false"])
             .default("true")
@@ -251,6 +256,8 @@ export const env = createEnv({
         MCP_ENABLED: process.env.MCP_ENABLED,
 
         DEMO_ENABLED: process.env.DEMO_ENABLED,
+
+        ORG_MEMBERS_CAN_DOWNLOAD_BACKUPS: process.env.ORG_MEMBERS_CAN_DOWNLOAD_BACKUPS,
 
         TELEMETRY: process.env.TELEMETRY,
 

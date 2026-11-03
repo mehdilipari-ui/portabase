@@ -15,7 +15,7 @@ import {ButtonWithConfirm} from "@/components/common/button-with-confirm";
 import {useServerDataTable} from "@/hooks/use-server-data-table";
 import {fetchBackupsAction} from "@/features/database/actions/backup-list.action";
 import type {FetchBackupsSchema} from "@/features/database/actions/backup-list.schema";
-import {isOrganizationManager} from "@/lib/acl/role";
+import {useOrganizationPermissions} from "@/hooks/acl/use-organization-acl";
 
 type DatabaseBackupListProps = {
     isAlreadyRestore: boolean;
@@ -95,11 +95,11 @@ export const DatabaseBackupList = (props: DatabaseBackupListProps) => {
         },
     });
 
-    const isMember = !isOrganizationManager(props.activeMember.role);
+    const {canManageDatabases} = useOrganizationPermissions(props.activeMember);
 
     return (
         <DataTable
-            enableSelect={!isMember}
+            enableSelect={canManageDatabases}
             columns={columns}
             data={data}
             enablePagination
@@ -109,7 +109,7 @@ export const DatabaseBackupList = (props: DatabaseBackupListProps) => {
                 <>
                     <div className="flex justify-start md:justify-between gap-3 md:gap-0 items-center w-full ml-0">
                         <div className="flex gap-2">
-                            {!isMember && (
+                            {canManageDatabases && (
                                 <DropdownMenu open={isActionsOpen} onOpenChange={setIsActionsOpen}>
                                     <DropdownMenuTrigger asChild>
                                         <ButtonWithLoading

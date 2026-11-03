@@ -18,7 +18,7 @@ import {AgentDialog} from "@/features/agents/components/agent-dialog";
 import {maskDatabasesSecretsForClient} from "@/features/database/utils/credential-fields";
 import {getActiveMember, getOrganization} from "@/lib/auth/auth";
 import {currentUser} from "@/lib/auth/current-user";
-import {computeOrganizationPermissions} from "@/lib/acl/organization-acl";
+import {getOrganizationPermissions} from "@/lib/acl/organization-acl.server";
 
 
 export default async function RoutePage(
@@ -34,7 +34,7 @@ export default async function RoutePage(
         notFound();
     }
 
-    const {canManageAgents} = computeOrganizationPermissions(activeMember);
+    const {canManageAgents} = getOrganizationPermissions(activeMember);
 
     if (!canManageAgents) {
         notFound();

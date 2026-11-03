@@ -20,6 +20,7 @@ data:
   CLEANING_BACKUPS_RETENTION_DAYS: {{ . | quote }}
   {{- end }}
   CLEANING_BACKUPS_BATCH_SIZE: {{ .Values.cleanup.backups.batchSize | quote }}
+  ORG_MEMBERS_CAN_DOWNLOAD_BACKUPS: {{ .Values.organization.membersCanDownloadBackups | quote }}
   {{- with .Values.smtp.host }}
   SMTP_HOST: {{ . | quote }}
   {{- end }}

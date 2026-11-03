@@ -1,7 +1,8 @@
 import "server-only";
 import {User} from "@/db/schema/02_user";
 import {getActiveMember, getOrganization} from "@/lib/auth/auth";
-import {computeOrganizationPermissions, type OrganizationPermissions} from "@/lib/acl/organization-acl";
+import {type OrganizationPermissions} from "@/lib/acl/organization-acl";
+import {getOrganizationPermissions} from "@/lib/acl/organization-acl.server";
 import {computeSystemPermissions} from "@/lib/acl/system-acl";
 import {ActionError} from "@/lib/safe-actions/actions";
 
@@ -18,7 +19,7 @@ export async function assertCanManageOrganization(
         !organization ||
         organization.id !== organizationId ||
         !activeMember ||
-        !computeOrganizationPermissions(activeMember)[capability]
+        !getOrganizationPermissions(activeMember)[capability]
     ) {
         throw new ActionError("You are not allowed to perform this action");
     }

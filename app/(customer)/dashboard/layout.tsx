@@ -6,6 +6,7 @@ import { AppSidebar } from "@/features/layout/components/app-sidebar";
 import { Header } from "@/features/layout/components/header";
 import { currentUser } from "@/lib/auth/current-user";
 import {AclProvider} from "@/lib/acl/acl-context";
+import {getOrganizationAclOptions} from "@/lib/acl/organization-acl.server";
 import { isOnboardingDone } from "@/db/services/setting";
 import { env } from "@/env.mjs";
 import { ModeToggle } from "@/features/theme/components/mode-toggle";
@@ -23,7 +24,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      <AclProvider demo={isDemoEnabled} user={user}>
+      <AclProvider demo={isDemoEnabled} user={user} organizationAclOptions={getOrganizationAclOptions()}>
         <div className="flex flex-col lg:flex-row w-full">
           <ThemeMetaUpdater />
           <AppSidebar updateNotification={<UpdateNotification />} />

@@ -1,7 +1,7 @@
 "use client"
 import {createAuthClient} from "better-auth/react";
 import {adminClient, inferAdditionalFields, organizationClient, twoFactorClient} from "better-auth/client/plugins";
-import {ac, user, admin as adminRole, pending, superadmin, orgAdmin, orgMember, orgDownloader, orgOwner} from "./permissions";
+import {ac, user, admin as adminRole, pending, superadmin, orgAdmin, orgMember, orgOwner} from "./permissions";
 import type {auth} from "@/lib/auth/auth";
 import {getServerUrl} from "@/utils/get-server-url";
 import { ssoClient } from "@better-auth/sso/client";
@@ -24,7 +24,6 @@ export const authClient = createAuthClient({
                 owner: orgOwner,
                 admin: orgAdmin,
                 member: orgMember,
-                downloader: orgDownloader,
             },
         }),
         adminClient({

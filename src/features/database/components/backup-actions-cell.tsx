@@ -17,7 +17,7 @@ import {cn} from "@/lib/utils";
 import {isReplica} from "@/features/database/utils/backup-method";
 import {MemberWithUser} from "@/db/schema/03_organization";
 import {TooltipCustom} from "@/components/common/tooltip-custom";
-import {canDownloadOrganizationBackups, isOrganizationManager} from "@/lib/acl/role";
+import {useOrganizationPermissions} from "@/hooks/acl/use-organization-acl";
 
 interface DatabaseActionsCellProps {
     backup: BackupWith;
@@ -28,16 +28,16 @@ interface DatabaseActionsCellProps {
 
 export function DatabaseActionsCell({backup, activeMember, isAlreadyRestore, isBackupOnly}: DatabaseActionsCellProps) {
     const {openModal} = useBackupModal();
+    const {canManageDatabases, canDownloadBackups} = useOrganizationPermissions(activeMember);
 
-    const isManager = isOrganizationManager(activeMember.role);
-    if (backup.deletedAt || !canDownloadOrganizationBackups(activeMember.role)) return null;
+    if (backup.deletedAt || (!canManageDatabases && !canDownloadBackups)) return null;
 
     const liveStorages = backup.storages?.filter((storage) => storage.deletedAt === null) ?? [];
-    const canDownload = liveStorages.length === 0 || liveStorages.some((storage) => storage.engine === "archive");
-    const canRestore = isManager && (liveStorages.length === 0 || liveStorages.some((storage) => !isReplica(storage.engine)));
+    const canDownload = canDownloadBackups && (liveStorages.length === 0 || liveStorages.some((storage) => storage.engine === "archive"));
+    const canRestore = canManageDatabases && (liveStorages.length === 0 || liveStorages.some((storage) => !isReplica(storage.engine)));
 
-    // Downloaders only get the download entry.
-    if (!isManager && (backup.status !== "success" || !canDownload)) return null;
+    // Read-only members only get the download entry.
+    if (!canManageDatabases && (backup.status !== "success" || !canDownload)) return null;
 
     return (
         <div className={cn("flex items-center space-x-2")}>
@@ -73,7 +73,7 @@ export function DatabaseActionsCell({backup, activeMember, isAlreadyRestore, isB
                         </>
                     ) : null}
 
-                    {isManager && (
+                    {canManageDatabases && (
                         <>
                             <DropdownMenuSeparator/>
                             <DropdownMenuItem onSelect={() => openModal("delete", backup)} className="text-red-600">

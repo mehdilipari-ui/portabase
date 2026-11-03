@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth/auth";
 import * as drizzleDb from "@/db";
 import { eq } from "drizzle-orm";
 import { logger } from "@/lib/logger";
-import {computeOrganizationPermissions} from "@/lib/acl/organization-acl";
+import {getOrganizationPermissions} from "@/lib/acl/organization-acl.server";
 import {db} from "@/db";
 import {computeSystemPermissions} from "@/lib/acl/system-acl";
 import {ApiKeyContext} from "@/lib/api-v1/types";
@@ -64,7 +64,7 @@ export function withApiKey(handler: ApiKeyHandler) {
           memberships.map(async (m) => {
             return {
               id: m.organizationId,
-              permissions:  computeOrganizationPermissions(m),
+              permissions:  getOrganizationPermissions(m),
             };
           })
       );

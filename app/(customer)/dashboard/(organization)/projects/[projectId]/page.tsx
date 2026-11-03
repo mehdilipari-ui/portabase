@@ -21,7 +21,7 @@ import { CronButton } from "@/features/database/components/cron-button";
 import { ChannelPoliciesModal } from "@/features/database/components/channels-policy-modal";
 import { Megaphone, HardDrive } from "lucide-react";
 import { InfoTooltip } from "@/features/stats/components/info-tooltip";
-import { isOrganizationManager } from "@/lib/acl/role";
+import {getOrganizationPermissions} from "@/lib/acl/organization-acl.server";
 
 export default async function RoutePage(
   props: PageParams<{
@@ -70,7 +70,7 @@ export default async function RoutePage(
   const availableDatabases = maskDatabasesSecretsForClient(
     await getOrganizationAvailableDatabases(organization.id, proj.id),
   );
-  const isMember = !isOrganizationManager(activeMember?.role);
+  const {canManageDatabases} = getOrganizationPermissions(activeMember ?? null);
 
   const orgNotificationChannels = (
     await getOrganizationChannels(org.id)
@@ -86,7 +86,7 @@ export default async function RoutePage(
           <div className="min-w-full md:min-w-fit ">
             {capitalizeFirstLetter(proj.name)}
           </div>
-          {!isMember && (
+          {canManageDatabases && (
             <div className="flex items-center gap-2 md:justify-between w-full ">
               <div className="flex items-center gap-2">
                 <ProjectDialog
@@ -142,7 +142,7 @@ export default async function RoutePage(
       </div>
       <PageContent className="flex flex-col w-full h-full">
         {proj.databases.length > 0 ? (
-          isMember ? (
+          !canManageDatabases ? (
             <CardsWithPagination
               data={[...proj.databases].sort(
                 (a, b) =>
